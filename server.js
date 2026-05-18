@@ -17,7 +17,7 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce';
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/ecommerce';
 
 // Middleware
 // 2. Allow origins from ALL sites (Current Setup)
@@ -59,13 +59,25 @@ app.use(cors({
 ======================================================================
 */
 
-// Connect to MongoDB first, then seed the database
-mongoose.connect(mongoUri)
+// Connect to MongoDB first, then seed the database (only on first startup)
+let isConnected = false;
+
+mongoose.connect(mongoUri, {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+})
   .then(async () => {
     console.log('MongoDB Connected Successfully.');
+    isConnected = true;
 
-    // Triggering the database seed safely now that the connection is alive
-    await seedDatabase();
+    // Only seed on first connection (skip in serverless to avoid repeated seeding)
+    if (process.env.NODE_ENV !== 'production' || !process.env.SKIP_SEED) {
+      try {
+        await seedDatabase();
+      } catch (seedErr) {
+        console.warn('Seeding warning (non-critical):', seedErr.message);
+      }
+    }
   })
   .catch((err) => {
     console.error('MongoDB Connection Error:', err);
