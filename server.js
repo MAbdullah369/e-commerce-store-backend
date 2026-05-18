@@ -24,6 +24,17 @@ const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://
 app.use(cors());
 app.use(express.json());
 
+// ═══════════════════════════════════════════════════════════
+// HEALTH CHECK ENDPOINT
+// ═══════════════════════════════════════════════════════════
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'Server is running! 🚀', timestamp: new Date().toISOString() });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Welcome to E-Commerce API', version: '1.0.0' });
+});
+
 
 /* 
 ======================================================================
